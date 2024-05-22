@@ -204,7 +204,7 @@ def find_path(x, y):
     print(f"Path: {path}, length: {len(path)}")
 
 def main():
-    find_path(x, y)
+    find_path(state, x, y)
 
 if __name__ == "__main__":
     main()
