@@ -16,7 +16,8 @@ R = np.array([[0, 0, 0, -1, 0, 0, -1, 0, 0, 0],
               [0, -1, 0, 0, 0, 0, 0, 0, -1, 0],
               [0, -1, -1, -1, 0, 0, -1, 0, -1, 0],
               [0, 0, 0, -1, 0, 0, -1, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, -1, 0, 0, 0]])
+              [0, 0, 0, 0, 0, 0, -1, 0, 0, 0],
+              [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1]])
 
 """
 Set parameters:
@@ -41,11 +42,11 @@ max_epsilon = 1.0
 min_epsilon = 0.05
 decay_rate = 0.0005
 epochs = 10000
-actions = ['up', 'down', 'left', 'right']
+actions = ['up', 'down', 'left', 'right', 'stay']
 x = len(R)
 y = len(R[0])
 states = x*y
-Q = np.zeros((states, 4))
+Q = np.zeros((states, 5))
 max_steps = 2000
 goal_state = 49
 
@@ -137,6 +138,8 @@ def learn_table(x, y):
                 next_state = random_state - 1
             elif action == 'right':
                 next_state = random_state + 1
+            elif action == 'stay':
+                next_state = random_state
             if random_state != goal_state:
                 reward = 0
             elif random_state == goal_state:
@@ -160,6 +163,8 @@ def select_state(state):
         next_state = state - 1
     elif action == 'right':
         next_state = state + 1
+    elif action == 'stay':
+        next_state = state
     return next_state
 
 def visualize(path, random_state):
@@ -173,7 +178,7 @@ def visualize(path, random_state):
     for x in range(len(R_copy)):
         if x in path:
             R_copy[x] = 1
-    R_copy = R_copy.reshape(9,10)
+    R_copy = R_copy.reshape(10,10)
     fig, ax = plt.subplots()
     ax.imshow(R_copy, cmap=cmap, norm=norm)
     ax.grid(which='major', axis='both', linestyle='-', color='k', linewidth=2)
@@ -204,7 +209,7 @@ def find_path(x, y):
     print(f"Path: {path}, length: {len(path)}")
 
 def main():
-    find_path(state, x, y)
+    find_path(x, y)
 
 if __name__ == "__main__":
     main()
