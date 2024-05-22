@@ -2,19 +2,21 @@
 
 import random
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import colors
 
 """
 Set the environment to learn
 """
-R = np.array([[1, 1, 1, -1, 1, 1, -1, 1, 1, 1],
-              [1, -1, -1, -1, 1, 1, 1, 1, -1, 1],
-              [1, 1, 1, 1, 1, 1, 1, 1, -1, 1],
-              [1, -1, 1, 1, -1, 1, 1, 1, -1, 1],
-              [1, -1, 1, 1, -1, -1, -1, -1, -1, 100],
-              [1, -1, 1, 1, 1, 1, 1, 1, -1, 1],
-              [1, -1, -1, -1, 1, 1, -1, 1, -1, 1],
-              [1, 1, 1, -1, 1, 1, -1, 1, 1, 1],
-              [1, 1, 1, 1, 1, 1, -1, 1, 1, 1]])
+R = np.array([[0, 0, 0, -1, 0, 0, -1, 0, 0, 0],
+              [0, -1, -1, -1, 0, 0, 0, 0, -1, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0, -1, 0],
+              [0, -1, 0, 0, -1, 0, 0, 0, -1, 0],
+              [0, -1, 0, 0, -1, -1, -1, -1, -1, 0],
+              [0, -1, 0, 0, 0, 0, 0, 0, -1, 0],
+              [0, -1, -1, -1, 0, 0, -1, 0, -1, 0],
+              [0, 0, 0, -1, 0, 0, -1, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, -1, 0, 0, 0]])
 
 """
 Set parameters:
@@ -160,14 +162,36 @@ def select_state(state):
         next_state = state + 1
     return next_state
 
-def main():
+def visualize(path, random_state):
+    """
+    Visualize the solved maze environment
+    """
+    cmap = colors.ListedColormap(['blue', 'white', 'green'])
+    norm = colors.TwoSlopeNorm(vmin=-1, vcenter=0, vmax=1)
+    R_copy = R.copy()
+    R_copy = R_copy.ravel()
+    for x in range(len(R_copy)):
+        if x in path:
+            R_copy[x] = 1
+    R_copy = R_copy.reshape(9,10)
+    fig, ax = plt.subplots()
+    ax.imshow(R_copy, cmap=cmap, norm=norm)
+    ax.grid(which='major', axis='both', linestyle='-', color='k', linewidth=2)
+    ax.set_title("Solved maze")
+    ax.set_xticks(np.arange(-.5, 10, 1))
+    ax.set_yticks(np.arange(-.5, 10, 1))
+    fig.savefig(f"images/state-{random_state}-path.png")
+    print(f"Figure saved at images/state-{random_state}-path.png")
+
+def find_path(x, y):
     """
     Find a path to the goal state from given random state
     """
     learn_table(x, y)
     walls = find_walls(x, y)
     possible_states = [x for x in range(len(Q)) if x not in walls]
-    state = random.choice(possible_states)
+    random_state = random.choice(possible_states)
+    state = random_state
     path = []
     while state != goal_state:
         path.append(state)
@@ -176,7 +200,11 @@ def main():
         if state == goal_state:
             path.append(state)
             break
+    visualize(path, random_state)
     print(f"Path: {path}, length: {len(path)}")
+
+def main():
+    find_path(x, y)
 
 if __name__ == "__main__":
     main()
