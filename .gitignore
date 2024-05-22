@@ -3,3 +3,5 @@
 !*.py
 !*.txt
 !*.ipynb
+!images/
+!images/*
