@@ -29,6 +29,11 @@ min epsilon - min value for epsilon
 decay rate - decay rate for epsilon, decrease probability of random actions over the course of iterations
 epochs - number of epochs to run
 actions - define possible actions
+    up - agent goes up
+    down - agent goes down
+    left - agent goes left
+    right - agent goes right
+    stay - agent stays at the same place
 x - number of rows
 y - number of columns
 states - number of possible states in Q table
@@ -61,7 +66,7 @@ def find_walls(x, y, state=0, walls=[]):
             state += 1
     return walls
 
-def initialize_table(x, y, state=0, walls=[]):
+def initialize_table(x, y, state=0):
     """
     Initializes the Q table with possible actions in every state
     """
@@ -70,7 +75,7 @@ def initialize_table(x, y, state=0, walls=[]):
     if state in walls:
         for a in range(len(actions)):
             Q[state][a] = -1
-    # Loop through states and determine possible actions for each of them
+    # Loop through states and determine possible actions for each state
     for i in range(x):
         for j in range(y):
             # Agent can't move up if it is on the first row or there is a wall above
@@ -86,7 +91,6 @@ def initialize_table(x, y, state=0, walls=[]):
             if j == y - 1 or state + 1 in walls:
                 Q[state][actions.index('right')] = -1
             state += 1
-    return [x for x in range(len(Q)) if x not in walls] # Return possible states
 
 def get_epsilon(epoch):
     """
@@ -105,56 +109,22 @@ def take_action(random_state, epsilon):
         if np.max(Q[random_state]) == -1:
             return None # If the best available action is hitting the wall, terminate the agent
         else:
-            return actions[np.argmax(Q[random_state])] # Choose random available action
+            return actions[np.argmax(Q[random_state])] # Choose action with max Q value
     else:
         indexes = [index for index,value in enumerate(Q[random_state]) if value != -1]
         possible_actions = [value for index,value in enumerate(actions) if index in indexes]
-        return random.choice(possible_actions)
+        return random.choice(possible_actions) # Choose random action
 
 def update_table(state, action, reward, next_state):
     """
-    Update Q table
+    Update Q table using temporal difference update rule
     """
     Q[state][actions.index(action)] += alpha * (reward + gamma * np.max(Q[next_state]) - Q[state][actions.index(action)])
 
-def learn_table(x, y):
+def select_state(state, action):
     """
-    Learn Q table
+    Select the nex state for a given action
     """
-    possible_states = initialize_table(x,y)
-    for epoch in range(epochs):
-        #print(f"Epoch: {epoch}")
-        random_state = random.choice(possible_states)
-        epsilon = get_epsilon(epoch)
-        for steps in range(max_steps):
-            action = take_action(random_state, epsilon)
-            if action == None:
-                break
-            elif action == 'up':
-                next_state = random_state - 10
-            elif action == 'down':
-                next_state = random_state + 10
-            elif    action == 'left':
-                next_state = random_state - 1
-            elif action == 'right':
-                next_state = random_state + 1
-            elif action == 'stay':
-                next_state = random_state
-            if random_state != goal_state:
-                reward = 0
-            elif random_state == goal_state:
-                reward = 100
-            #print(f"Epoch: {epoch}, steps: {steps}, random state: {random_state}, next state: {next_state}")
-            update_table(random_state, action, reward, next_state)
-            random_state = next_state
-            if reward == 100:
-                break
-
-def select_state(state):
-    """
-    Find the best action for a given state and select the next state
-    """
-    action = actions[np.argmax(Q[state])]
     if action == 'up':
         next_state = state - 10
     elif action == 'down':
@@ -166,6 +136,24 @@ def select_state(state):
     elif action == 'stay':
         next_state = state
     return next_state
+
+def learn_table(x, y):
+    """
+    Explore the environment iteratively and refine the Q table
+    """
+    initialize_table(x, y)
+    walls = find_walls(x, y)
+    possible_states = [x for x in range(len(Q)) if x not in walls]
+    for epoch in range(epochs):
+        random_state = random.choice(possible_states)
+        epsilon = get_epsilon(epoch)
+        for steps in range(max_steps):
+            action = take_action(random_state, epsilon)
+            next_state = select_state(random_state, action)
+            reward = 100 if random_state == goal_state else 0 # Reward the agent only if it finds the goal state
+            update_table(random_state, action, reward, next_state)
+            random_state = next_state
+            if reward == 100: break # Stop the epoch when goal is reached
 
 def visualize(path, random_state):
     """
@@ -188,7 +176,7 @@ def visualize(path, random_state):
     fig.savefig(f"images/state-{random_state}-path.png")
     print(f"Figure saved at images/state-{random_state}-path.png")
 
-def find_path(x, y):
+def find_path(x, y, path=[]):
     """
     Find a path to the goal state from given random state
     """
@@ -197,10 +185,10 @@ def find_path(x, y):
     possible_states = [x for x in range(len(Q)) if x not in walls]
     random_state = random.choice(possible_states)
     state = random_state
-    path = []
     while state != goal_state:
         path.append(state)
-        next_state = select_state(state)
+        action = actions[np.argmax(Q[state])]
+        next_state = select_state(state, action)
         state = next_state
         if state == goal_state:
             path.append(state)
