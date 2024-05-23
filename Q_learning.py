@@ -75,7 +75,7 @@ def initialize_table(x, y, state=0):
     if state in walls:
         for a in range(len(actions)):
             Q[state][a] = -1
-    # Loop through states and determine possible actions for each state
+    # Loop through states and determine unavailable actions for each state
     for i in range(x):
         for j in range(y):
             # Agent can't move up if it is on the first row or there is a wall above
